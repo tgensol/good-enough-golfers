@@ -1,45 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Good-Enough Golfers</title>
-
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-110301203-1"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'UA-110301203-1');
-    </script>
-
-    <link rel="stylesheet" href="index.css"/>
-    <script src="https://cdn.jsdelivr.net/npm/immutable@3.8.2/dist/immutable.min.js"></script>
+    <title>Games Tournament</title>
+    <link rel="stylesheet" href="index.css" />
+    <script src="./immutable.min.js"></script>
     <script src="index.js" type="text/javascript"></script>
 </head>
+
 <body>
     <div id="controls">
-        <h1>Good-Enough Golfers</h1>
+        <h1>Games Tournament</h1>
         <table>
             <tr>
                 <th>Number of groups</th>
-                <td class="sliderLabel" id="groupsLabel"}>0</td>
+                <td class="sliderLabel" id="groupsLabel" }>0</td>
                 <td>
-                    <input id="groupsSlider" type="range" min="1" max="20" step="1" value="5"/>
+                    <input id="groupsSlider" type="range" min="1" max="20" step="1" value="6" disabled />
                 </td>
             </tr>
             <tr>
                 <th>People per group</th>
-                <td class="sliderLabel" id="ofSizeLabel"}>0</td>
+                <td class="sliderLabel" id="ofSizeLabel" }>0</td>
                 <td>
-                    <input id="ofSizeSlider" type="range" min="2" max="8" step="1" value="4"/>
+                    <input id="ofSizeSlider" type="range" min="2" max="8" step="1" value="7" disabled />
                 </td>
             </tr>
             <tr>
                 <th>Number of rounds</th>
-                <td class="sliderLabel" id="forRoundsLabel"}>0</td>
+                <td class="sliderLabel" id="forRoundsLabel" }>0</td>
                 <td>
-                    <input id="forRoundsSlider" type="range" min="1" max="20" step="1" value="7"/>
+                    <input id="forRoundsSlider" type="range" min="1" max="20" step="1" value="6" disabled />
+                </td>
+            </tr>
+            <tr>
+                <th>Number of games</th>
+                <td class="sliderLabel" id="forGamesLabel" }>0</td>
+                <td>
+                    <input id="forGamesSlider" type="range" min="1" max="20" step="1" value="6" disabled />
                 </td>
             </tr>
         </table>
@@ -49,27 +48,38 @@
             </div>
             <div>
                 <textarea id="playerNames" rows="21">
-Alleson
-Brad
-Charlie
-Danielle
-Fredric
-George
-Harriet
-Ivan
-Jenny
-Karen
-Laura
-Mona
-Nathan
-Olive
-Penelope
-Rachel
-Stan
-Tom
-[Empty]
-[Empty]
 </textarea>
+            </div>
+        </div>
+        <div>
+            <div>
+                <strong>Jeux 1-6</strong>
+            </div>
+            <div>
+                <textarea id="gamesFirst" rows="21">
+Saute Mouton
+Lancer de poids
+Foot à 7
+Rugby à 20
+Morpion
+Olives
+Apéro
+        </textarea>
+            </div>
+        </div>
+        <div>
+            <div>
+                <strong>Jeux 6-12</strong>
+            </div>
+            <div>
+                <textarea id="gamesNext" rows="21">
+Indemne du Memphis
+Un croisé, deux croisés, trois...
+Je te tiens, tu me tiens...
+Nous ce qu'on veut c'est des gros ... 
+Kuku on t'aime 
+Omar aussi
+        </textarea>
             </div>
         </div>
         <div>
@@ -78,13 +88,18 @@ Tom
             </div>
             <div>
                 <textarea id="forbiddenPairs" rows="6">
-Brad, Danielle
-[Empty], [Empty]
 </textarea>
             </div>
         </div>
+        <button id="btn1">Faire les 6 premiers</button>
+        <button id="btn2">Faire les 6 derniers</button>
+        <h2>Vérifications</h2>
+        <div id="verifs">
+
+        </div>
         <p>
-            <em>Good-Enough Golfers</em> is a near-solver for a class of scheduling problems including the
+            <em>From the Good-Enough Golfers</em>, which is a near-solver for a class of scheduling problems including
+            the
             <a href="http://mathworld.wolfram.com/SocialGolferProblem.html">Social Golfer Problem</a>
             and
             <a href="http://mathworld.wolfram.com/KirkmansSchoolgirlProblem.html">Kirkman's Schoolgirl Problem</a>.
@@ -96,7 +111,7 @@ Brad, Danielle
             often good enough for real-world purposes.
         </p>
         <p>
-            <a href="http://bradleycbuchanan.com">Brad Buchanan</a>, 2017
+            <a href="http://bradleycbuchanan.com"><b>Huge Thanks</b> to Brad Buchanan</a>, 2017
             -
             <a href="https://github.com/islemaster/good-enough-golfers">Source on GitHub</a>
         </p>
@@ -105,4 +120,5 @@ Brad, Danielle
 
     </div>
 </body>
+
 </html>

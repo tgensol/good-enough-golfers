@@ -1,11 +1,17 @@
-let controlsDiv, resultsDiv
+let controlsDiv, resultsDiv, verifDiv
 let controls = {}
-
+let playersToFollow
+let gamesNames
+let players
 let groups = 0
+let error = 0
+let errors
 let ofSize = 0
 let forRounds = 0
 let playerNames = []
 let forbiddenPairs = Immutable.Set()
+let gamesFirst
+let gamesNext
 
 let lastResults
 const myWorker = new Worker('lib/worker.js');
@@ -15,6 +21,26 @@ function init() {
 
   controlsDiv = document.getElementById('controls')
   resultsDiv = document.getElementById('results')
+  verifDiv = document.getElementById('verifs')
+  gamesNext = document.getElementById('gamesNext').textContent
+  gamesFirst = document.getElementById('gamesFirst').textContent
+  if (gamesFirst) {
+    gamesFirst = gamesFirst.split('\n')
+      .map(stringPair =>
+        stringPair
+        .split(',')
+        .map(name => name.trim())
+      )
+  }
+
+  if (gamesNext) {
+    gamesNext = gamesNext.split('\n')
+      .map(stringPair =>
+        stringPair
+        .split(',')
+        .map(name => name.trim())
+      )
+  }
 
   controls.groupsLabel = controlsDiv.querySelector('#groupsLabel')
   controls.groupsSlider = controlsDiv.querySelector('#groupsSlider')
@@ -24,14 +50,12 @@ function init() {
   controls.forRoundsSlider = controlsDiv.querySelector('#forRoundsSlider')
   controls.playerNames = controlsDiv.querySelector('#playerNames')
   controls.forbiddenPairs = controlsDiv.querySelector('#forbiddenPairs')
+  controls.numberGames = controlsDiv.querySelector('#forGamesSlider')
 
   // User input controls
   controls.groupsSlider.oninput = onSliderMoved
   controls.ofSizeSlider.oninput = onSliderMoved
   controls.forRoundsSlider.oninput = onSliderMoved
-  controls.groupsSlider.onchange = onParametersChanged
-  controls.ofSizeSlider.onchange = onParametersChanged
-  controls.forRoundsSlider.onchange = onParametersChanged
   controls.playerNames.onkeyup = onPlayerNamesKeyUp
   controls.playerNames.onchange = onPlayerNamesChanged
   controls.forbiddenPairs.onchange = onForbiddenPairsChanged
@@ -39,7 +63,31 @@ function init() {
   playerNames = readPlayerNames()
   forbiddenPairs = readForbiddenPairs(playerNames)
   onSliderMoved()
-  onParametersChanged()
+
+  document.getElementById('btn1').onclick = () => {
+    lastResults = null;
+    gamesNames = gamesFirst
+    renderResults()
+    disableControls()
+    myWorker.postMessage({
+      groups,
+      ofSize,
+      forRounds,
+      forbiddenPairs: forbiddenPairs.toJS()
+    })
+  }
+  document.getElementById('btn2').onclick = () => {
+    lastResults = null;
+    gamesNames = gamesNext
+    renderResults()
+    disableControls()
+    myWorker.postMessage({
+      groups,
+      ofSize,
+      forRounds,
+      forbiddenPairs: forbiddenPairs.toJS()
+    })
+  }
 }
 
 function onResults(e) {
@@ -77,24 +125,34 @@ function enableControls() {
   controls.forbiddenPairs.disabled = false
 }
 
-// This happens when a slider's value is changed and the slider
-// is released, after onSliderMoved
-function onParametersChanged() {
-  lastResults = null;
-  renderResults()
-  disableControls()
-  myWorker.postMessage({groups, ofSize, forRounds, forbiddenPairs: forbiddenPairs.toJS()})
+
+function createGames() {
+  const N = Array(parseInt(controls.numberGames.value)).fill(null)
+  return N.map((_, i) => `Game ${i}`)
 }
 
 function readPlayerNames() {
-  return controls.playerNames.value
+  const games = createGames()
+  return games.concat(controls.playerNames.value
     .split('\n')
-    .map(name => name.trim())
+    .map(name => name.trim()))
+}
+
+function createPairsOfGames() {
+  const games = createGames()
+  const pairs = []
+  games.forEach((_, idx1) => {
+    games.forEach((_, idx2) => {
+      if (idx2 > idx1)
+        pairs.push([`Game ${idx1}`, `Game ${idx2}`])
+    })
+  })
+  return pairs
 }
 
 function onPlayerNamesKeyUp() {
   playerNames = readPlayerNames()
-  renderResults()
+
 }
 
 function onPlayerNamesChanged() {
@@ -102,15 +160,11 @@ function onPlayerNamesChanged() {
   const newForbiddenPairs = readForbiddenPairs(playerNames)
   if (!forbiddenPairs.equals(newForbiddenPairs)) {
     forbiddenPairs = newForbiddenPairs
-    onParametersChanged()
-  } else {
-    renderResults()
   }
 }
 
 function onForbiddenPairsChanged() {
   forbiddenPairs = readForbiddenPairs(playerNames)
-  onParametersChanged()
 }
 
 /**
@@ -120,14 +174,16 @@ function onForbiddenPairsChanged() {
  * @return {Immutable.Set<Immutable.Set<number>>}
  */
 function readForbiddenPairs(playerNames) {
-  return controls.forbiddenPairs.value
+  const pairsOfGames = createPairsOfGames()
+  const res = controls.forbiddenPairs.value
     .split('\n')
     .map(stringPair =>
       stringPair
-        .split(',')
-        .map(name =>name.trim())
+      .split(',')
+      .map(name => name.trim())
     )
-    .filter(pair => pair.length === 2) // Drop lines that aren't pairs
+    .filter(pair => pair.length === 2)
+    .concat(pairsOfGames)
     .reduce((memo, [leftName, rightName]) => {
       const leftIndices = indicesOf(leftName, playerNames)
       const rightIndices = indicesOf(rightName, playerNames)
@@ -140,6 +196,7 @@ function readForbiddenPairs(playerNames) {
       }
       return memo
     }, Immutable.Set())
+  return res
 }
 
 function indicesOf(needle, haystack) {
@@ -158,7 +215,19 @@ function renderResults() {
     return
   }
   resultsDiv.innerHTML = ''
+
+  players = {}
+  Array(parseInt(controls.numberGames.value + 36)).fill(null).forEach((_, idx) => {
+    if (idx > 5) {
+      players[idx] = []
+    }
+  })
+  if (!playersToFollow && !Array.isArray(playersToFollow)) {
+    playersToFollow = [Math.round(Math.random() * 30 + 6), Math.round(Math.random() * 30 + 6), Math.round(Math.random() * 30 + 6)]
+  }
   lastResults.rounds.forEach((round, roundIndex) => {
+    error = 0
+    errors = []
     const roundDiv = document.createElement('div')
     roundDiv.classList.add('round')
 
@@ -172,28 +241,59 @@ function renderResults() {
     const groups = document.createElement('div')
     groups.classList.add('groups')
 
+
     round.forEach((group, groupIndex) => {
       const groupDiv = document.createElement('div')
       groupDiv.classList.add('group')
       const groupName = document.createElement('h2')
-      groupName.textContent = `Group ${groupIndex + 1}`
+      const sorted = group.sort((a, b) => parseInt(a) < parseInt(b) ? -1 : 1)
+      const game = sorted.filter((personNumber) => (playerNames[personNumber] || `Player ${personNumber + 1}`).indexOf("Game") === 0)[0]
+      groupName.textContent = `${gamesNames[game]}`
       groupDiv.appendChild(groupName)
 
       const members = document.createElement('ul')
-      group.sort((a, b) => parseInt(a) < parseInt(b) ? -1 : 1).forEach(personNumber => {
+      sorted.forEach(personNumber => {
         const member = document.createElement('li')
-        member.textContent = playerNames[personNumber] ? playerNames[personNumber] : `Player ${personNumber+1}`
-        members.appendChild(member)
+        let text = playerNames[personNumber] ? playerNames[personNumber] : `Player ${personNumber + 1}`
+        if (players[personNumber]) {
+          if (game && players[personNumber] && players[personNumber].indexOf(game) > -1) {
+            error += 1
+            errors.push(personNumber)
+          }
+          players[personNumber].push(game)
+        }
+        if (players[personNumber] && playersToFollow.indexOf(personNumber) > -1) {
+
+          text = `<b style="color:red">${text}</b>`
+        }
+
+
+
+        if (text.indexOf("Game") === -1) {
+          member.innerHTML = text
+          members.appendChild(member)
+        }
+
       })
       groupDiv.appendChild(members)
 
       groups.appendChild(groupDiv)
     })
 
+
     roundDiv.appendChild(header)
     roundDiv.appendChild(groups)
     resultsDiv.appendChild(roundDiv)
   })
+  verifDiv.innerHTML = ''
+  playersToFollow.forEach((c) => {
+    const member = document.createElement('p')
+    member.textContent = `Player ${(+c)+1} plays ${players[c]}`
+    verifDiv.appendChild(member)
+  })
+  const member = document.createElement('p')
+  member.innerHTML = `<b style="color:red">Error ${error}, ${errors}</b>`
+  verifDiv.appendChild(member)
 }
 
 document.addEventListener('DOMContentLoaded', init)

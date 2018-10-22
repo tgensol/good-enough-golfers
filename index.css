@@ -10,6 +10,7 @@ h1 {
     border-bottom: solid black thin;
     font-size: 14pt;
 }
+
 h2 {
     font-size: 12pt;
     margin-bottom: 0.2em;
@@ -18,23 +19,29 @@ h2 {
 #controls {
     margin-right: 2em;
 }
+
 #controls h1 {
     font-variant: small-caps;
     text-align: center;
 }
+
 #controls th {
     white-space: nowrap;
     text-align: right;
 }
+
 #controls .sliderLabel {
     width: 2em;
     text-align: center;
     overflow: hidden;
 }
-#controls #playerNames, #controls #forbiddenPairs {
+
+#controls #playerNames,
+#controls #forbiddenPairs {
     width: 100%;
     resize: none;
 }
+
 #controls p {
     font-size: 10pt;
     max-width: 305px;
@@ -43,32 +50,35 @@ h2 {
 #results {
     width: 50%;
 }
+
 #results .conflictScore {
     font-size: 10pt;
     font-weight: normal;
     float: right;
 }
+
 #results .groups {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
 }
+
 #results .groups .group {
-    min-width: 120px;
+    min-width: 250px;
 }
+
 #results .groups .group ul {
     margin-top: 0.2em;
     padding-left: 20px;
 }
 
 input[type=range]::-moz-range-track {
-  height: 5px;
-  background: #ddd;
-  border: none;
-  border-radius: 3px;
+    height: 5px;
+    background: #ddd;
+    border: none;
+    border-radius: 3px;
 }
 
 input[type=range]:focus::-moz-range-track {
-  background: #ccc;
+    background: #ccc;
 }
-
